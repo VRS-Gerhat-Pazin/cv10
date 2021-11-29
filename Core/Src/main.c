@@ -26,12 +26,15 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "string.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+typedef enum led_mode {
+	MODE_AUTO,
+	MODE_MANUAL
+} LED_MODE;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -46,7 +49,11 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+volatile uint8_t start_sign_received = 0;
+volatile uint8_t command_buffer[10];
+volatile uint8_t command_buffer_pos = 0;
+volatile LED_MODE mode = MODE_AUTO;
+volatile uint8_t led_target_duty = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -102,12 +109,10 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
+  USART2_RegisterCallback(proccesDmaData);
+
   LL_TIM_CC_EnableChannel(TIM2, LL_TIM_CHANNEL_CH1);
   LL_TIM_EnableCounter(TIM2);
-//  TIM2->CCR1 = 20;
-//  TIM2->CCR1 = 50;
-//  TIM2->CCR1 = 80;
-
 
   /* USER CODE END 2 */
 
@@ -157,7 +162,56 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void proccesDmaData(uint8_t sign)
 {
-	// TODO process received data
+	if((sign == '\n') || (sign == '\r') || (sign == '\0'))
+	{
+		return;
+	}
+
+	if(!start_sign_received)
+	{
+		if(sign == '$')
+		{
+			start_sign_received = 1;
+			command_buffer_pos = 0;
+			return;
+		}
+	}
+	else
+	{
+		if(sign == '$')
+		{
+			start_sign_received = 0;
+
+			if(!strncmp(command_buffer, "manual", 6))
+			{
+				mode = MODE_MANUAL;
+				return;
+			}
+
+			if(!strncmp(command_buffer, "auto", 4))
+			{
+				mode = MODE_AUTO;
+				return;
+			}
+
+			if(!strncmp(command_buffer, "PWM", 3))
+			{
+				int8_t tens = command_buffer[3] - '0';
+				int8_t ones = command_buffer[4] - '0';
+
+				if((ones > 9) || (tens > 9) || (ones < 0) || (tens < 0))
+				{
+					return;
+				}
+
+				led_target_duty = tens*10 + ones;
+			}
+			return;
+		}
+
+		command_buffer[command_buffer_pos] = sign;
+		command_buffer_pos++;
+	}
 }
 
 void setDutyCycle(uint8_t D)

@@ -54,9 +54,9 @@ void MX_USART2_UART_Init(void)
   LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
   /**USART2 GPIO Configuration
   PA2   ------> USART2_TX
-  PA3   ------> USART2_RX
+  PA15   ------> USART2_RX
   */
-  GPIO_InitStruct.Pin = LL_GPIO_PIN_2|LL_GPIO_PIN_3;
+  GPIO_InitStruct.Pin = LL_GPIO_PIN_2|LL_GPIO_PIN_15;
   GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
   GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
   GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
@@ -101,7 +101,21 @@ void MX_USART2_UART_Init(void)
   NVIC_EnableIRQ(USART2_IRQn);
 
   /* USER CODE BEGIN USART2_Init 1 */
+  LL_DMA_ConfigAddresses(DMA1,
+		  LL_DMA_CHANNEL_6,
+		  LL_USART_DMA_GetRegAddr(USART2, LL_USART_DMA_REG_DATA_RECEIVE),
+		  (uint32_t)bufferUSART2dma,
+	      LL_DMA_GetDataTransferDirection(DMA1, LL_DMA_CHANNEL_6));
+  LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_6, UART2_DMA_BUFFER_SIZE);
+  LL_USART_EnableIT_IDLE(USART2);
+  LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_6);
+  LL_USART_EnableDMAReq_RX(USART2);
+  LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_6);
+  LL_DMA_EnableIT_HT(DMA1, LL_DMA_CHANNEL_6);
 
+  LL_DMA_SetPeriphAddress(DMA1, LL_DMA_CHANNEL_7, LL_USART_DMA_GetRegAddr(USART2, LL_USART_DMA_REG_DATA_TRANSMIT));
+  LL_USART_EnableDMAReq_TX(USART2);
+  LL_DMA_EnableIT_TE(DMA1, LL_DMA_CHANNEL_7);
   /* USER CODE END USART2_Init 1 */
   USART_InitStruct.BaudRate = 38400;
   USART_InitStruct.DataWidth = LL_USART_DATAWIDTH_8B;
