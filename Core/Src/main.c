@@ -52,6 +52,7 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
+void setDutyCycle(uint8_t D);
 void proccesDmaData(uint8_t sign);
 /* USER CODE END PFP */
 
@@ -157,6 +158,13 @@ void SystemClock_Config(void)
 void proccesDmaData(uint8_t sign)
 {
 	// TODO process received data
+}
+
+void setDutyCycle(uint8_t D)
+{
+	uint8_t pulse_length;
+	pulse_length = ((TIM2->ARR) * D) / 100;
+	TIM2->CCR1 = pulse_length;
 }
 /* USER CODE END 4 */
 
