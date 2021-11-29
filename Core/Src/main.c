@@ -54,6 +54,8 @@ volatile uint8_t command_buffer[10];
 volatile uint8_t command_buffer_pos = 0;
 volatile LED_MODE mode = MODE_AUTO;
 volatile uint8_t led_target_duty = 0;
+volatile uint8_t led_real_duty = 0;
+volatile uint8_t direction = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -220,6 +222,49 @@ void setDutyCycle(uint8_t D)
 	pulse_length = ((TIM2->ARR) * D) / 100;
 	TIM2->CCR1 = pulse_length;
 }
+
+void update_PWM()
+{
+	if(mode==MODE_MANUAL)
+	{
+		if(led_real_duty<led_target_duty)
+		{
+			led_real_duty++;
+		}
+
+		if(led_real_duty>led_target_duty)
+		{
+			led_real_duty--;
+		}
+	}
+
+	if(mode==MODE_AUTO)
+	{
+		if(direction==0)
+		{
+			led_real_duty++;
+			if(led_real_duty==99)
+			{
+				direction=1;
+			}
+		}
+
+		else if(direction==1)
+		{
+			led_real_duty--;
+			if(led_real_duty==0)
+			{
+				direction=0;
+			}
+		}
+	}
+
+	setDutyCycle(led_real_duty);
+}
+
+
+
+
 /* USER CODE END 4 */
 
 /**

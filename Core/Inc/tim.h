@@ -38,7 +38,8 @@ extern "C" {
 void MX_TIM2_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+void checkTimerInterrupt();
+void TIM2CC2_register_callback(void *callback);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
