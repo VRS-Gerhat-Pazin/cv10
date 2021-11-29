@@ -63,6 +63,7 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 void setDutyCycle(uint8_t D);
 void proccesDmaData(uint8_t sign);
+void update_PWM();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -115,6 +116,10 @@ int main(void)
 
   LL_TIM_CC_EnableChannel(TIM2, LL_TIM_CHANNEL_CH1);
   LL_TIM_EnableCounter(TIM2);
+
+  TIM2CC2_register_callback(update_PWM);
+  LL_TIM_CC_EnableChannel(TIM2, LL_TIM_CHANNEL_CH2);
+  LL_TIM_EnableIT_CC2(TIM2);
 
   /* USER CODE END 2 */
 
